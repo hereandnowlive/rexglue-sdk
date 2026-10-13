@@ -58,9 +58,6 @@ add_library(rex::kernel ALIAS rexruntime)
 # and (importantly) guarantees the Xbox-360 kernel-stub __imp__* symbols are
 # exported even when the dual-backend (D3D12+Vulkan) build's full symbol set
 # would otherwise push them out of the linker's export table.
-# (Windows only: a .def file is a PE concept. ELF shared objects export their
-# default-visibility symbols.)
-if(WIN32)
 set(REXRUNTIME_DEF "${CMAKE_CURRENT_SOURCE_DIR}/rexruntime.def")
 if(WIN32 AND NOT REXGLUE_USE_VULKAN)
     # The curated table contains dual-backend imports. D3D12-only builds must
@@ -76,9 +73,12 @@ endif()
 # -Xlinker; and the path must be space-free (the project path contains spaces),
 # so it is made relative to the top-level build dir (the linker's working dir).
 file(RELATIVE_PATH REXRUNTIME_DEF_REL "${CMAKE_BINARY_DIR}" "${REXRUNTIME_DEF}")
-set_target_properties(rexruntime PROPERTIES
-    LINK_DEPENDS "${REXRUNTIME_DEF}"
-    LINK_OPTIONS "-Xlinker;/DEF:${REXRUNTIME_DEF_REL}")
+# Windows only: a .def file is a PE concept. ELF shared objects export their
+# default-visibility symbols.
+if(WIN32)
+    set_target_properties(rexruntime PROPERTIES
+        LINK_DEPENDS "${REXRUNTIME_DEF}"
+        LINK_OPTIONS "-Xlinker;/DEF:${REXRUNTIME_DEF_REL}")
 endif()
 
 rex_target_pch(rexruntime
